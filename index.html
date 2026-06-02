@@ -1,12 +1,51 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>할머니 안심벨</title>
+  <meta charset="UTF-8">
+  <title>할머니 안심 알림</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
-<body>
-    <h1>할머니 안심벨 서비스</h1>
-    <p>할머니, 무슨 일이 있으시면 이 버튼을 눌러주세요!</p>
-    <button onclick="alert('도움 요청이 전송되었습니다!')">긴급 호출</button>
+<body class="bg-gray-100 p-5">
+  <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-4">할머니 안심 루틴</h1>
+    <div id="routine-list">로딩 중...</div>
+  </div>
+
+  <script>
+    const firebaseConfig = { databaseURL: "https://bell-d3c5f-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const routineList = [
+      { name: '아침 식사', time: '07:00' },
+      { name: '점심 식사', time: '12:00' },
+      { name: '저녁 식사', time: '18:00' }
+    ];
+
+    db.ref('/').on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      const listDiv = document.getElementById('routine-list');
+      listDiv.innerHTML = '';
+      
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      routineList.forEach(item => {
+        const targetHour = parseInt(item.time.split(':')[0]);
+        const isDone = data[item.name] === 'done';
+        let statusText = isDone ? '확인 완료' : (currentHour >= targetHour ? '확인 필요' : '확인 예정');
+        let statusClass = isDone ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+
+        listDiv.innerHTML += `
+          <div class="flex justify-between items-center p-3 border-b">
+            <div><strong>${item.time} ${item.name}</strong></div>
+            <div class="${statusClass} px-3 py-1 rounded-lg font-bold">${statusText}</div>
+          </div>
+        `;
+      });
+    });
+  </script>
 </body>
 </html>
